@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title> 前端 mqtt  连接 RabbitMQ </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+  <!--
+        https://www.eclipse.org/paho/clients/js/
+  -->
+  </head>
+  <body></body>
+  <script>
+    /*
+      qos  = 0  最多一次的传输 消息是基于TCP/IP网络传输的。没有回应，在协议中也没有定义重传的语义。消息可能到达服务器1次，也可能根本不会到达。
+      qos  = 1  至少一次的传输 服务器接收到消息会被确认，通过传输一个PUBACK信息。
+      qos  = 2  只有一次的传输 在QoS level 1上附加的协议流保证了重复的消息不会传送到接收的应用
+     */
+    var client = new Paho.MQTT.Client("192.168.20.99", 15675, "/ws", "myclientid_" + parseInt(Math.random() * 100, 10));
+    client.onConnectionLost = onConnectionLost;
+    client.onMessageArrived = onMessageArrived;
+
+    client.connect({
+      timeout: 3,  //
+      keepAliveInterval: 30,
+      userName: 'admin', //mq的用户名
+      password: 'admin',//mq的密码
+     onSuccess:onConnect,
+      onFailure:function (mes) {
+        console.log(mes);
+      }
+    });
+    function onConnect() {
+      console.log("mqtt连接成功");
+      client.subscribe("/zvams/alarm/trigger"); //订阅  主题
+    // ,{qos:1}
+    }
+    function onConnectionLost(responseObject) {
+      console.log("连接断开");
+    }
+    function onMessageArrived(message) {
+      console.log("接受消息");
+      console.log(message);
+      console.log(JSON.parse(message.payloadString));
+    }
+  </script>
+</html>
